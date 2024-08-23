@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Analyzer</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1 { color: #333; }
+        input { width: 100%; padding: 10px; margin-bottom: 10px; }
+        button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        #results { margin-top: 20px; background-color: #f0f0f0; padding: 20px; }
+        #graph { max-width: 100%; height: auto; }
+    </style>
+</head>
+<body>
+    <h1>YouTube Video Analyzer</h1>
+    <form id="analyzeForm">
+        <input type="text" id="videoUrl" placeholder="Enter YouTube Video URL" required>
+        <button type="submit">Analyze</button>
+    </form>
+    <div id="results"></div>
+
+    <script>
+        document.getElementById('analyzeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const videoUrl = document.getElementById('videoUrl').value;
+            
+            document.getElementById('results').innerHTML = '<p>Analyzing... This may take a minute.</p>';
+            
+            const response = await fetch('/analyze', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `video_url=${encodeURIComponent(videoUrl)}`
+            });
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                document.getElementById('results').innerHTML = `<p>Error: ${data.error}</p>`;
+            } else {
+                document.getElementById('results').innerHTML = `
+                    <h2>Results:</h2>
+                    <h3>Video Statistics:</h3>
+                    <p>Title: ${data.video_stats.title}</p>
+                    <p>Views: ${data.video_stats.views}</p>
+                    <p>Likes: ${data.video_stats.likes}</p>
+                    <p>Comments: ${data.video_stats.comments}</p>
+                    <h3>Comment Sentiment Analysis:</h3>
+                    <p>Positive comments: ${data.sentiment_counts.positive}</p>
+                    <p>Negative comments: ${data.sentiment_counts.negative}</p>
+                    <p>Overall sentiment: ${data.overall_sentiment}</p>
+                    <h3>Sentiment Distribution:</h3>
+                    <img id="graph" src="data:image/png;base64,${data.graph}" alt="Sentiment Distribution Graph">
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
